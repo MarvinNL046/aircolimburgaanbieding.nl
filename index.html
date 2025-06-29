@@ -244,7 +244,7 @@
                                 <span>📞 Direct contact</span>
                             </div>
                         </div>
-                        <form id="hero-form" class="contact-form">
+                        <form id="hero-form" class="contact-form" onsubmit="console.log('Form submitting...', this);">
                             <div class="form-row">
                                 <input type="text" name="voornaam" placeholder="Voornaam *" required>
                                 <input type="text" name="achternaam" placeholder="Achternaam *" required>
@@ -261,6 +261,8 @@
                                 </svg>
                             </button>
                         </form>
+                        <!-- Debug button - verwijder dit later -->
+                        <button onclick="debugHeroForm()" style="margin-top: 10px; background: #666; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 12px;">Debug Form Data</button>
                     </div>
                 </div>
             </div>
@@ -787,5 +789,50 @@
     <!-- Scripts -->
     <script type="module" src="/assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- Debug script - verwijder dit later -->
+    <script>
+        function debugHeroForm() {
+            const form = document.getElementById('hero-form');
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            console.log('Hero Form Data:', data);
+            console.log('Form element:', form);
+            console.log('EmailJS loaded?', typeof emailjs !== 'undefined');
+            
+            // Test direct EmailJS send
+            if (typeof emailjs !== 'undefined') {
+                console.log('Testing direct EmailJS send...');
+                // Initialize EmailJS if not already done
+                if (!emailjs._publicKey) {
+                    emailjs.init('sjJ8kK6U9wFjY0zX9');
+                }
+                emailjs.send('service_1rruujp', 'template_rkcpzhg', {
+                    voornaam: data.voornaam || 'Test',
+                    achternaam: data.achternaam || 'User',
+                    email: data.email || 'test@test.com',
+                    telefoon: data.telefoon || '0612345678',
+                    stad: data.stad || 'Maastricht',
+                    bericht: data.bericht || 'Debug test',
+                    from_name: `${data.voornaam || 'Test'} ${data.achternaam || 'User'}`,
+                    from_email: data.email || 'test@test.com',
+                    message: data.bericht || 'Debug test',
+                    full_message: `Debug test from hero form\n\nData: ${JSON.stringify(data, null, 2)}`
+                }).then(
+                    response => console.log('EmailJS Success:', response),
+                    error => console.error('EmailJS Error:', error)
+                );
+            } else {
+                console.error('EmailJS not loaded!');
+            }
+            
+            alert('Check console for debug info');
+        }
+    </script>
 </body>
 </html>
