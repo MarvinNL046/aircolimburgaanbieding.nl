@@ -155,7 +155,16 @@ class Navigation {
 class TypewriterEffect {
   constructor(element, texts, options = {}) {
     this.element = element;
-    this.texts = texts;
+    // Check if texts is an array or parse from data attribute
+    if (typeof texts === 'string') {
+      try {
+        this.texts = JSON.parse(texts);
+      } catch (e) {
+        this.texts = [texts];
+      }
+    } else {
+      this.texts = texts;
+    }
     this.speed = options.speed || 100;
     this.deleteSpeed = options.deleteSpeed || 50;
     this.pauseTime = options.pauseTime || 2000;
@@ -204,6 +213,13 @@ class FormHandler {
   }
   
   init() {
+    // Wait for EmailJS to load
+    if (typeof emailjs === 'undefined') {
+      // Retry after a short delay if EmailJS not loaded yet
+      setTimeout(() => this.init(), 100);
+      return;
+    }
+    
     // Initialize EmailJS
     emailjs.init(CONFIG.emailjs.publicKey);
     
@@ -232,6 +248,8 @@ class FormHandler {
       tijd: new Date().toLocaleTimeString('nl-NL')
     };
     
+    console.log('Submitting form with data:', templateParams);
+    
     // Validation
     if (!this.validateForm(templateParams)) {
       this.showMessage('Vul alle verplichte velden in.', 'error');
@@ -242,12 +260,21 @@ class FormHandler {
     this.setButtonLoading(submitButton, true);
     
     try {
+      // Check if EmailJS is available
+      if (typeof emailjs === 'undefined') {
+        throw new Error('EmailJS is not loaded');
+      }
+      
+      console.log('Sending email with EmailJS...');
+      
       // Send email via EmailJS
-      await emailjs.send(
+      const response = await emailjs.send(
         CONFIG.emailjs.serviceId,
         CONFIG.emailjs.templateId,
         templateParams
       );
+      
+      console.log('EmailJS response:', response);
       
       this.showMessage('Bedankt! Uw aanvraag is verstuurd. Wij nemen binnen 24 uur contact met u op.', 'success');
       form.reset();
@@ -261,6 +288,7 @@ class FormHandler {
       
     } catch (error) {
       console.error('EmailJS Error:', error);
+      console.error('Error details:', error.text || error.message);
       this.showMessage('Er is een fout opgetreden. Probeer het opnieuw of bel ons direct: 046-202-1430', 'error');
     } finally {
       this.setButtonLoading(submitButton, false);
@@ -597,14 +625,17 @@ class App {
     try {
       // Core components
       new Navigation();
-      new FormHandler();
       
       // Typewriter effect
       const typewriterElement = $('.typewriter');
       if (typewriterElement) {
+        // Check if element has data-texts attribute
+        const dataTexts = typewriterElement.getAttribute('data-texts');
+        const texts = dataTexts ? dataTexts : JSON.stringify(CONFIG.typewriter.texts);
+        
         new TypewriterEffect(
           typewriterElement,
-          CONFIG.typewriter.texts,
+          texts,
           CONFIG.typewriter
         );
       }
@@ -615,6 +646,20 @@ class App {
       new Analytics();
       new AccessibilityEnhancer();
       new ErrorHandler();
+      
+      // Initialize FormHandler after EmailJS loads
+      const initFormHandler = () => {
+        if (typeof emailjs !== 'undefined') {
+          new FormHandler();
+          console.log('FormHandler initialized with EmailJS');
+        } else {
+          // Retry after 100ms
+          setTimeout(initFormHandler, 100);
+        }
+      };
+      
+      // Start trying to initialize FormHandler
+      initFormHandler();
       
       console.log('Airco Limburg Aanbieding - App initialized successfully');
       

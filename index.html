@@ -251,20 +251,7 @@
                             </div>
                             <input type="email" name="email" placeholder="E-mailadres *" required>
                             <input type="tel" name="telefoon" placeholder="Telefoonnummer *" required>
-                            <select name="stad" required>
-                                <option value="">Selecteer uw stad</option>
-                                <option value="Maastricht">Maastricht</option>
-                                <option value="Sittard">Sittard</option>
-                                <option value="Heerlen">Heerlen</option>
-                                <option value="Geleen">Geleen</option>
-                                <option value="Brunssum">Brunssum</option>
-                                <option value="Kerkrade">Kerkrade</option>
-                                <option value="Voerendaal">Voerendaal</option>
-                                <option value="Hoensbroek">Hoensbroek</option>
-                                <option value="Landgraaf">Landgraaf</option>
-                                <option value="Roermond">Roermond</option>
-                                <option value="Anders">Anders</option>
-                            </select>
+                            <input type="text" name="stad" placeholder="Uw woonplaats *" required>
                             <textarea name="bericht" placeholder="Beschrijf uw wensen (optioneel)" rows="3"></textarea>
                             <button type="submit" class="btn btn-primary btn-full">
                                 <span>Gratis Offerte Aanvragen</span>
@@ -572,20 +559,7 @@
                             </div>
                             <input type="email" name="email" placeholder="E-mailadres *" required>
                             <input type="tel" name="telefoon" placeholder="Telefoonnummer *" required>
-                            <select name="stad" required>
-                                <option value="">In welke stad woont u?</option>
-                                <option value="Maastricht">Maastricht</option>
-                                <option value="Sittard">Sittard</option>
-                                <option value="Heerlen">Heerlen</option>
-                                <option value="Geleen">Geleen</option>
-                                <option value="Brunssum">Brunssum</option>
-                                <option value="Kerkrade">Kerkrade</option>
-                                <option value="Voerendaal">Voerendaal</option>
-                                <option value="Hoensbroek">Hoensbroek</option>
-                                <option value="Landgraaf">Landgraaf</option>
-                                <option value="Roermond">Roermond</option>
-                                <option value="Anders">Anders</option>
-                            </select>
+                            <input type="text" name="stad" placeholder="In welke stad woont u? *" required>
                             <select name="service">
                                 <option value="">Wat kunnen wij voor u doen?</option>
                                 <option value="Nieuwe airco installatie">Nieuwe airco installatie</option>
@@ -812,6 +786,6 @@
 
     <!-- Scripts -->
     <script type="module" src="/assets/js/main.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </body>
 </html>
