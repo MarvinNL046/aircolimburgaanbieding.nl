@@ -699,7 +699,9 @@ class App {
       new AccessibilityEnhancer();
       new ErrorHandler();
       
-      // Initialize FormHandler after EmailJS loads
+      // DISABLED - Using emailjs-handler.js instead
+      // FormHandler is now handled by emailjs-handler.js which works correctly
+      /*
       const initFormHandler = () => {
         if (typeof emailjs !== 'undefined') {
           new FormHandler();
@@ -712,6 +714,7 @@ class App {
       
       // Start trying to initialize FormHandler
       initFormHandler();
+      */
       
       console.log('Airco Limburg Aanbieding - App initialized successfully');
       
