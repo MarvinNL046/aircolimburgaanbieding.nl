@@ -1,0 +1,43 @@
+AFBEELDINGEN STRUCTUUR VOOR AIRCO LIMBURG AANBIEDING
+=====================================================
+
+Plaats de volgende afbeeldingen in deze map (/images/):
+
+LOGO & BRANDING:
+- logo.png (optioneel, nu tekst logo)
+- favicon.ico (16x16 of 32x32)
+
+HERO/ACHTERGRONDEN:
+- hero-bg.jpg (1920x1080 min, airco of Limburg landschap)
+- pattern.svg (optioneel voor textuur)
+
+MERK LOGO'S (/images/brands/):
+- daikin-logo.png (200x100px, transparent)
+- mitsubishi-logo.png (200x100px, transparent)
+- lg-logo.png (200x100px, transparent)
+- samsung-logo.png (200x100px, transparent)
+- toshiba-logo.png (200x100px, transparent)
+- tosot-logo.png (200x100px, transparent)
+
+OPEN GRAPH/SOCIAL:
+- og-image.jpg (1200x630px voor Facebook/LinkedIn)
+- og-maastricht.jpg (1200x630px)
+- og-sittard.jpg (1200x630px)
+- og-heerlen.jpg (1200x630px)
+
+SERVICE AFBEELDINGEN (optioneel):
+- airco-installatie.jpg
+- airco-onderhoud.jpg
+- airco-reparatie.jpg
+
+PRODUCT AFBEELDINGEN (optioneel):
+- daikin-stylish.jpg
+- mitsubishi-msz.jpg
+- lg-artcool.jpg
+- etc.
+
+TIPS:
+- Gebruik WebP formaat voor betere performance
+- Optimaliseer met TinyPNG.com
+- Lazy loading is al ingesteld in code
+- Alt teksten zijn al toegevoegd in HTML

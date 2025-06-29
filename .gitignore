@@ -1,0 +1,32 @@
+# Node modules
+node_modules/
+.vite/
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Large image files (voorbeelden installaties)
+public/images/voorbeelden_onze_installaties/
+*.jpg
+*.JPG
+
+# Keep only optimized product images
+!public/images/products/*.webp
+!public/images/brands/*.svg

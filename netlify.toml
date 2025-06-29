@@ -1,0 +1,100 @@
+[build]
+  publish = "."
+  
+[build.environment]
+  NODE_VERSION = "18"
+
+# Headers voor beveiliging en performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirects voor SEO en gebruiksvriendelijkheid
+[[redirects]]
+  from = "/airco-maastricht"
+  to = "/steden/maastricht.html"
+  status = 301
+
+[[redirects]]
+  from = "/airco-sittard"
+  to = "/steden/sittard.html"
+  status = 301
+
+[[redirects]]
+  from = "/airco-heerlen"
+  to = "/steden/heerlen.html"
+  status = 301
+
+[[redirects]]
+  from = "/maastricht"
+  to = "/steden/maastricht.html"
+  status = 301
+
+[[redirects]]
+  from = "/sittard"
+  to = "/steden/sittard.html"
+  status = 301
+
+[[redirects]]
+  from = "/heerlen"
+  to = "/steden/heerlen.html"
+  status = 301
+
+# Fallback voor SPA routes (als nodig)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variables die je in Netlify moet instellen:
+# NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_1rruujp
+# NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_rkcpzhg  
+# NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=sjJ8kK6U9wFjY0zX9
+
+# Form handling voor contact formulieren
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true
