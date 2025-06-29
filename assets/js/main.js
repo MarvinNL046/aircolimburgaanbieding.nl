@@ -220,8 +220,13 @@ class FormHandler {
       return;
     }
     
-    // Initialize EmailJS
-    emailjs.init(CONFIG.emailjs.publicKey);
+    // Initialize EmailJS with the public key
+    try {
+      emailjs.init(CONFIG.emailjs.publicKey);
+      console.log('EmailJS initialized successfully');
+    } catch (error) {
+      console.error('EmailJS init error:', error);
+    }
     
     this.forms.forEach(form => {
       form.addEventListener('submit', (e) => this.handleSubmit(e));
@@ -311,11 +316,13 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
       }
       
       console.log('Sending email with EmailJS...');
+      console.log('Service ID:', CONFIG.emailjs.serviceId);
+      console.log('Template ID:', CONFIG.emailjs.templateId);
       
-      // Send email via EmailJS
+      // Send email via EmailJS - exact same way as test page
       const response = await emailjs.send(
-        CONFIG.emailjs.serviceId,
-        CONFIG.emailjs.templateId,
+        'service_1rruujp',
+        'template_rkcpzhg',
         templateParams
       );
       
