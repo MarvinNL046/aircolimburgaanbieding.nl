@@ -208,33 +208,18 @@ class TypewriterEffect {
 // ===== FORM HANDLER =====
 class FormHandler {
   constructor() {
-    this.forms = $$('.contact-form');
-    this.init();
+    // Do nothing - let emailjs-handler.js handle everything
+    return;
   }
   
   init() {
-    // Wait for EmailJS to load
-    if (typeof emailjs === 'undefined') {
-      // Retry after a short delay if EmailJS not loaded yet
-      setTimeout(() => this.init(), 100);
-      return;
-    }
-    
-    // Initialize EmailJS with the public key
-    try {
-      emailjs.init(CONFIG.emailjs.publicKey);
-      console.log('EmailJS initialized successfully');
-    } catch (error) {
-      console.error('EmailJS init error:', error);
-    }
-    
-    this.forms.forEach(form => {
-      form.addEventListener('submit', (e) => this.handleSubmit(e));
-    });
+    // Do nothing
+    return;
   }
   
   async handleSubmit(e) {
-    e.preventDefault();
+    // Do nothing - handled by emailjs-handler.js
+    return;
     
     const form = e.target;
     const submitButton = form.querySelector('button[type="submit"]');
