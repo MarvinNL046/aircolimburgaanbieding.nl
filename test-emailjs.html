@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test EmailJS Template</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #F97316;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #EA580C;
+        }
+        pre {
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .success {
+            color: green;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>EmailJS Template Test</h1>
+    
+    <div class="test-section">
+        <h2>Template Variabelen</h2>
+        <p>De volgende variabelen worden naar EmailJS gestuurd:</p>
+        <pre id="template-vars"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Email Versturen</h2>
+        <button onclick="testEmail()">Test Email Versturen</button>
+        <div id="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>EmailJS Template Instructies</h2>
+        <p>Zorg ervoor dat uw EmailJS template de volgende variabelen gebruikt:</p>
+        <ul>
+            <li><strong>{{voornaam}}</strong> - Voornaam van de klant</li>
+            <li><strong>{{achternaam}}</strong> - Achternaam van de klant</li>
+            <li><strong>{{email}}</strong> - Email adres</li>
+            <li><strong>{{telefoon}}</strong> - Telefoonnummer</li>
+            <li><strong>{{stad}}</strong> - Woonplaats</li>
+            <li><strong>{{service}}</strong> - Geselecteerde service</li>
+            <li><strong>{{bericht}}</strong> - Aanvullende informatie</li>
+            <li><strong>{{datum}}</strong> - Datum van aanvraag</li>
+            <li><strong>{{tijd}}</strong> - Tijd van aanvraag</li>
+        </ul>
+        
+        <p>Of gebruik deze algemene variabelen:</p>
+        <ul>
+            <li><strong>{{from_name}}</strong> - Volledige naam</li>
+            <li><strong>{{from_email}}</strong> - Email adres</li>
+            <li><strong>{{message}}</strong> - Bericht</li>
+            <li><strong>{{phone}}</strong> - Telefoonnummer</li>
+            <li><strong>{{city}}</strong> - Stad</li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        // Initialize EmailJS
+        emailjs.init('sjJ8kK6U9wFjY0zX9');
+        
+        // Test data
+        const testData = {
+            voornaam: 'Test',
+            achternaam: 'Gebruiker',
+            email: 'test@example.com',
+            telefoon: '0612345678',
+            stad: 'Maastricht',
+            service: 'Nieuwe airco installatie',
+            bericht: 'Dit is een test bericht om te controleren of de email template werkt.',
+            datum: new Date().toLocaleDateString('nl-NL'),
+            tijd: new Date().toLocaleTimeString('nl-NL'),
+            from_name: 'Test Gebruiker',
+            from_email: 'test@example.com',
+            message: 'Dit is een test bericht om te controleren of de email template werkt.',
+            phone: '0612345678',
+            city: 'Maastricht'
+        };
+        
+        // Display template variables
+        document.getElementById('template-vars').textContent = JSON.stringify(testData, null, 2);
+        
+        // Test email function
+        async function testEmail() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Versturen...';
+            
+            try {
+                const response = await emailjs.send(
+                    'service_1rruujp',
+                    'template_rkcpzhg',
+                    testData
+                );
+                
+                console.log('Success:', response);
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Email succesvol verstuurd!<br>
+                        Status: ${response.status}<br>
+                        Text: ${response.text}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Fout bij versturen:<br>
+                        ${error.text || error.message || 'Onbekende fout'}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

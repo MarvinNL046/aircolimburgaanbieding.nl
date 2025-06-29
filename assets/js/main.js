@@ -245,7 +245,13 @@ class FormHandler {
       service: formData.get('service') || 'Niet gespecificeerd',
       bericht: formData.get('bericht') || 'Geen aanvullende informatie',
       datum: new Date().toLocaleDateString('nl-NL'),
-      tijd: new Date().toLocaleTimeString('nl-NL')
+      tijd: new Date().toLocaleTimeString('nl-NL'),
+      // Add commonly used EmailJS variable names
+      from_name: `${formData.get('voornaam')} ${formData.get('achternaam')}`,
+      from_email: formData.get('email'),
+      message: formData.get('bericht') || 'Geen aanvullende informatie',
+      phone: formData.get('telefoon'),
+      city: formData.get('stad')
     };
     
     console.log('Submitting form with data:', templateParams);
