@@ -235,29 +235,68 @@ class FormHandler {
     const submitButton = form.querySelector('button[type="submit"]');
     const formData = new FormData(form);
     
-    // Prepare data for EmailJS
+    // Prepare data for EmailJS with null checks
+    const voornaam = formData.get('voornaam') || '';
+    const achternaam = formData.get('achternaam') || '';
+    const email = formData.get('email') || '';
+    const telefoon = formData.get('telefoon') || '';
+    const stad = formData.get('stad') || '';
+    const service = formData.get('service') || 'Niet gespecificeerd';
+    const bericht = formData.get('bericht') || 'Geen aanvullende informatie';
+    
     const templateParams = {
+      voornaam: voornaam,
+      achternaam: achternaam,
+      email: email,
+      telefoon: telefoon,
+      stad: stad,
+      service: service,
+      bericht: bericht,
+      datum: new Date().toLocaleDateString('nl-NL'),
+      tijd: new Date().toLocaleTimeString('nl-NL'),
+      // Add commonly used EmailJS variable names
+      from_name: `${voornaam} ${achternaam}`.trim(),
+      from_email: email,
+      message: bericht,
+      phone: telefoon,
+      city: stad,
+      // Add a full message summary
+      full_message: `
+Nieuwe aanvraag via AircoLimburgAanbieding.nl
+
+Naam: ${voornaam} ${achternaam}
+Email: ${email}
+Telefoon: ${telefoon}
+Stad: ${stad}
+Service: ${service}
+Bericht: ${bericht}
+
+Datum: ${new Date().toLocaleDateString('nl-NL')}
+Tijd: ${new Date().toLocaleTimeString('nl-NL')}
+      `.trim()
+    };
+    
+    console.log('Submitting form with data:', templateParams);
+    
+    // Log individual values for debugging
+    console.log('Form values:', {
       voornaam: formData.get('voornaam'),
       achternaam: formData.get('achternaam'),
       email: formData.get('email'),
       telefoon: formData.get('telefoon'),
       stad: formData.get('stad'),
-      service: formData.get('service') || 'Niet gespecificeerd',
-      bericht: formData.get('bericht') || 'Geen aanvullende informatie',
-      datum: new Date().toLocaleDateString('nl-NL'),
-      tijd: new Date().toLocaleTimeString('nl-NL'),
-      // Add commonly used EmailJS variable names
-      from_name: `${formData.get('voornaam')} ${formData.get('achternaam')}`,
-      from_email: formData.get('email'),
-      message: formData.get('bericht') || 'Geen aanvullende informatie',
-      phone: formData.get('telefoon'),
-      city: formData.get('stad')
-    };
-    
-    console.log('Submitting form with data:', templateParams);
+      bericht: formData.get('bericht')
+    });
     
     // Validation
     if (!this.validateForm(templateParams)) {
+      console.error('Validation failed for fields:', {
+        voornaam: !templateParams.voornaam || templateParams.voornaam.trim() === '',
+        achternaam: !templateParams.achternaam || templateParams.achternaam.trim() === '',
+        email: !templateParams.email || templateParams.email.trim() === '',
+        telefoon: !templateParams.telefoon || templateParams.telefoon.trim() === '',
+        stad: !templateParams.stad || templateParams.stad.trim() === ''
+      });
       this.showMessage('Vul alle verplichte velden in.', 'error');
       return;
     }
