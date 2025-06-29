@@ -208,18 +208,33 @@ class TypewriterEffect {
 // ===== FORM HANDLER =====
 class FormHandler {
   constructor() {
-    // Do nothing - let emailjs-handler.js handle everything
-    return;
+    this.forms = $$('.contact-form');
+    this.init();
   }
   
   init() {
-    // Do nothing
-    return;
+    // Wait for EmailJS to load
+    if (typeof emailjs === 'undefined') {
+      // Retry after a short delay if EmailJS not loaded yet
+      setTimeout(() => this.init(), 100);
+      return;
+    }
+    
+    // Initialize EmailJS with the public key
+    try {
+      emailjs.init(CONFIG.emailjs.publicKey);
+      console.log('EmailJS initialized successfully');
+    } catch (error) {
+      console.error('EmailJS init error:', error);
+    }
+    
+    this.forms.forEach(form => {
+      form.addEventListener('submit', (e) => this.handleSubmit(e));
+    });
   }
   
   async handleSubmit(e) {
-    // Do nothing - handled by emailjs-handler.js
-    return;
+    e.preventDefault();
     
     const form = e.target;
     const submitButton = form.querySelector('button[type="submit"]');
@@ -684,9 +699,7 @@ class App {
       new AccessibilityEnhancer();
       new ErrorHandler();
       
-      // DISABLED - Using emailjs-handler.js instead
-      // FormHandler is now handled by emailjs-handler.js which works correctly
-      /*
+      // Initialize FormHandler after EmailJS loads
       const initFormHandler = () => {
         if (typeof emailjs !== 'undefined') {
           new FormHandler();
@@ -699,7 +712,6 @@ class App {
       
       // Start trying to initialize FormHandler
       initFormHandler();
-      */
       
       console.log('Airco Limburg Aanbieding - App initialized successfully');
       
