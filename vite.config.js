@@ -16,9 +16,7 @@ export default defineConfig({
     // Optimize chunks
     rollupOptions: {
       output: {
-        manualChunks: {
-          'emailjs': ['emailjs-com']
-        }
+        // Remove manualChunks for emailjs since it's loaded via CDN
       }
     },
     // Asset optimization
