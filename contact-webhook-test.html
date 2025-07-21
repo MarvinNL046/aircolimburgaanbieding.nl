@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Webhook Test - AircoLimburgAanbieding.nl</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .test-container {
+      max-width: 600px;
+      margin: 100px auto;
+      padding: 2rem;
+      background: #f9fafb;
+      border-radius: 12px;
+    }
+    .test-info {
+      background: #dbeafe;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+    .result-box {
+      margin-top: 2rem;
+      padding: 1rem;
+      border-radius: 8px;
+      display: none;
+    }
+    .result-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    .result-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .debug-info {
+      background: #f3f4f6;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body class="navbar-always-visible">
+  <!-- Navigation -->
+  <nav id="navbar" class="navbar">
+    <div class="container">
+      <div class="nav-wrapper">
+        <div class="nav-brand">
+          <a href="/" class="logo">
+            <img src="/assets/images/logo.svg" alt="StayCool Airco">
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="test-container">
+      <h1 style="margin-bottom: 1rem;">GoHighLevel Webhook Test</h1>
+      
+      <div class="test-info">
+        <strong>Test Mode:</strong> Deze pagina test alleen de webhook verbinding met GoHighLevel.<br>
+        EmailJS wordt NIET gebruikt op deze testpagina.
+      </div>
+
+      <form id="webhook-test-form" class="contact-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="voornaam">Voornaam *</label>
+            <input type="text" id="voornaam" name="voornaam" value="Test" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="achternaam">Achternaam *</label>
+            <input type="text" id="achternaam" name="achternaam" value="Webhook" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">E-mailadres *</label>
+          <input type="email" id="email" name="email" value="test@webhook.nl" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="telefoon">Telefoonnummer *</label>
+          <input type="tel" id="telefoon" name="telefoon" value="0612345678" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="stad">Stad *</label>
+          <input type="text" id="stad" name="stad" value="Maastricht" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="bericht">Bericht</label>
+          <textarea id="bericht" name="bericht" rows="4">Dit is een test bericht voor de webhook.</textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <span>Test Webhook</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12,5 19,12 12,19"></polyline>
+          </svg>
+        </button>
+      </form>
+
+      <div id="result" class="result-box"></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { sendWebhookOnly } from './assets/js/utils/email.js';
+
+    const form = document.getElementById('webhook-test-form');
+    const resultBox = document.getElementById('result');
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const button = form.querySelector('button[type="submit"]');
+      const formData = new FormData(form);
+      
+      // Prepare data
+      const data = {
+        voornaam: formData.get('voornaam'),
+        achternaam: formData.get('achternaam'),
+        email: formData.get('email'),
+        telefoon: formData.get('telefoon'),
+        stad: formData.get('stad'),
+        bericht: formData.get('bericht')
+      };
+      
+      // Update button
+      button.disabled = true;
+      button.innerHTML = '<span>Testing...</span>';
+      
+      // Clear previous results
+      resultBox.style.display = 'none';
+      resultBox.className = 'result-box';
+      
+      try {
+        const startTime = Date.now();
+        const success = await sendWebhookOnly(data);
+        const duration = Date.now() - startTime;
+        
+        if (success) {
+          resultBox.className = 'result-box result-success';
+          resultBox.innerHTML = `
+            <h3>✓ Webhook Success!</h3>
+            <p>De webhook is succesvol aangeroepen.</p>
+            <div class="debug-info">
+Response time: ${duration}ms
+Webhook URL: https://services.leadconnectorhq.com/hooks/k90zUH3RgEQLfj7Yc55b/webhook-trigger/54670718-ea44-43a1-a81a-680ab3d5f67f
+Data sent: ${JSON.stringify(data, null, 2)}
+            </div>
+          `;
+        } else {
+          throw new Error('Webhook returned false');
+        }
+      } catch (error) {
+        resultBox.className = 'result-box result-error';
+        resultBox.innerHTML = `
+          <h3>✗ Webhook Failed</h3>
+          <p>Er is een fout opgetreden bij het aanroepen van de webhook.</p>
+          <div class="debug-info">
+Error: ${error.message}
+Webhook URL: https://services.leadconnectorhq.com/hooks/k90zUH3RgEQLfj7Yc55b/webhook-trigger/54670718-ea44-43a1-a81a-680ab3d5f67f
+          </div>
+        `;
+      } finally {
+        resultBox.style.display = 'block';
+        button.disabled = false;
+        button.innerHTML = '<span>Test Webhook</span>';
+      }
+    });
+  </script>
+</body>
+</html>

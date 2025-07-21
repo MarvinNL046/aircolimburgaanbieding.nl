@@ -205,10 +205,11 @@ class TypewriterEffect {
   }
 }
 
-// ===== FORM HANDLER =====
+// ===== FORM HANDLER WITH WEBHOOK =====
 class FormHandler {
   constructor() {
     this.forms = $$('.contact-form');
+    this.webhookUrl = 'https://services.leadconnectorhq.com/hooks/k90zUH3RgEQLfj7Yc55b/webhook-trigger/54670718-ea44-43a1-a81a-680ab3d5f67f';
     this.init();
   }
   
@@ -310,23 +311,28 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
     this.setButtonLoading(submitButton, true);
     
     try {
-      // Check if EmailJS is available
-      if (typeof emailjs === 'undefined') {
-        throw new Error('EmailJS is not loaded');
+      // Send using dual submission system (EmailJS + Webhook)
+      const [emailJSSuccess, webhookSuccess] = await Promise.all([
+        this.sendViaEmailJS(templateParams),
+        this.sendToWebhook({
+          voornaam,
+          achternaam,
+          email,
+          telefoon,
+          stad,
+          bericht
+        })
+      ]);
+      
+      console.log('Submission results:', {
+        emailJS: emailJSSuccess,
+        webhook: webhookSuccess
+      });
+      
+      // Only throw error if BOTH methods fail
+      if (!emailJSSuccess && !webhookSuccess) {
+        throw new Error('Failed to send contact form data');
       }
-      
-      console.log('Sending email with EmailJS...');
-      console.log('Service ID:', CONFIG.emailjs.serviceId);
-      console.log('Template ID:', CONFIG.emailjs.templateId);
-      
-      // Send email via EmailJS - exact same way as test page
-      const response = await emailjs.send(
-        'service_1rruujp',
-        'template_rkcpzhg',
-        templateParams
-      );
-      
-      console.log('EmailJS response:', response);
       
       this.showMessage('Bedankt! Uw aanvraag is verstuurd. Wij nemen binnen 24 uur contact met u op.', 'success');
       form.reset();
@@ -339,11 +345,69 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
       }
       
     } catch (error) {
-      console.error('EmailJS Error:', error);
-      console.error('Error details:', error.text || error.message);
+      console.error('Form submission error:', error);
       this.showMessage('Er is een fout opgetreden. Probeer het opnieuw of bel ons direct: 046-202-1430', 'error');
     } finally {
       this.setButtonLoading(submitButton, false);
+    }
+  }
+  
+  async sendViaEmailJS(templateParams) {
+    try {
+      // Check if EmailJS is available
+      if (typeof emailjs === 'undefined') {
+        console.error('EmailJS is not loaded');
+        return false;
+      }
+      
+      console.log('Sending email with EmailJS...');
+      
+      const response = await emailjs.send(
+        CONFIG.emailjs.serviceId,
+        CONFIG.emailjs.templateId,
+        templateParams
+      );
+      
+      console.log('EmailJS response:', response);
+      return true;
+    } catch (error) {
+      console.error('EmailJS Error:', error);
+      return false;
+    }
+  }
+  
+  async sendToWebhook(data) {
+    try {
+      const webhookData = {
+        data: {
+          name: `${data.voornaam} ${data.achternaam}`.trim(),
+          email: data.email,
+          phone: data.telefoon,
+          city: data.stad,
+          message: data.bericht || 'Geen aanvullende informatie'
+        }
+      };
+      
+      console.log('Sending to webhook:', webhookData);
+      
+      const response = await fetch(this.webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(webhookData)
+      });
+      
+      if (!response.ok) {
+        console.error('Webhook response not OK:', response.status);
+        return false;
+      }
+      
+      console.log('Webhook sent successfully');
+      return true;
+    } catch (error) {
+      console.error('Webhook error:', error);
+      return false;
     }
   }
   
