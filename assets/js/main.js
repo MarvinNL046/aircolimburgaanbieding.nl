@@ -209,11 +209,11 @@ class TypewriterEffect {
 class FormHandler {
   constructor() {
     this.forms = $$('.contact-form');
-    this.webhookUrl = 'https://services.leadconnectorhq.com/hooks/k90zUH3RgEQLfj7Yc55b/webhook-trigger/54670718-ea44-43a1-a81a-680ab3d5f67f';
+    this.emailUtilLoaded = false;
     this.init();
   }
   
-  init() {
+  async init() {
     // Wait for EmailJS to load
     if (typeof emailjs === 'undefined') {
       // Retry after a short delay if EmailJS not loaded yet
@@ -227,6 +227,16 @@ class FormHandler {
       console.log('EmailJS initialized successfully');
     } catch (error) {
       console.error('EmailJS init error:', error);
+    }
+    
+    // Try to import email utility module
+    try {
+      const emailModule = await import('./utils/email.js');
+      this.sendEmail = emailModule.sendEmail;
+      this.emailUtilLoaded = true;
+      console.log('Email utility module loaded successfully');
+    } catch (error) {
+      console.warn('Email utility module not loaded, using inline methods:', error);
     }
     
     this.forms.forEach(form => {
@@ -311,27 +321,51 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
     this.setButtonLoading(submitButton, true);
     
     try {
-      // Send using dual submission system (EmailJS + Webhook)
-      const [emailJSSuccess, webhookSuccess] = await Promise.all([
-        this.sendViaEmailJS(templateParams),
-        this.sendToWebhook({
+      let submissionResult;
+      
+      // Use email utility module if loaded, otherwise use inline methods
+      if (this.emailUtilLoaded && this.sendEmail) {
+        // Use the email utility module for dual submission
+        const formDataObj = {
           voornaam,
           achternaam,
           email,
           telefoon,
           stad,
+          service,
           bericht
-        })
-      ]);
-      
-      console.log('Submission results:', {
-        emailJS: emailJSSuccess,
-        webhook: webhookSuccess
-      });
-      
-      // Only throw error if BOTH methods fail
-      if (!emailJSSuccess && !webhookSuccess) {
-        throw new Error('Failed to send contact form data');
+        };
+        
+        submissionResult = await this.sendEmail(formDataObj);
+        
+        console.log('Submission results (via module):', submissionResult);
+        
+        if (!submissionResult.success) {
+          throw new Error('Failed to send contact form data');
+        }
+      } else {
+        // Fallback to inline methods
+        const [emailJSSuccess, webhookSuccess] = await Promise.all([
+          this.sendViaEmailJS(templateParams),
+          this.sendToWebhook({
+            voornaam,
+            achternaam,
+            email,
+            telefoon,
+            stad,
+            bericht
+          })
+        ]);
+        
+        console.log('Submission results (inline):', {
+          emailJS: emailJSSuccess,
+          webhook: webhookSuccess
+        });
+        
+        // Only throw error if BOTH methods fail
+        if (!emailJSSuccess && !webhookSuccess) {
+          throw new Error('Failed to send contact form data');
+        }
       }
       
       this.showMessage('Bedankt! Uw aanvraag is verstuurd. Wij nemen binnen 24 uur contact met u op.', 'success');
@@ -378,6 +412,7 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
   
   async sendToWebhook(data) {
     try {
+      const webhookUrl = 'https://services.leadconnectorhq.com/hooks/k90zUH3RgEQLfj7Yc55b/webhook-trigger/54670718-ea44-43a1-a81a-680ab3d5f67f';
       const webhookData = {
         data: {
           name: `${data.voornaam} ${data.achternaam}`.trim(),
@@ -390,7 +425,7 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
       
       console.log('Sending to webhook:', webhookData);
       
-      const response = await fetch(this.webhookUrl, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

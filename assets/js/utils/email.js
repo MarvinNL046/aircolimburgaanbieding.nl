@@ -115,8 +115,34 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
   }
 };
 
+// Analytics tracking helpers
+const trackFormSubmission = (formType, success, method) => {
+  // Google Analytics 4
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'form_submission', {
+      form_type: formType || 'contact_form',
+      success: success,
+      submission_method: method,
+      send_to: 'G-XXXXXXXXXX' // Replace with actual GA4 ID
+    });
+  }
+  
+  // Facebook Pixel
+  if (typeof fbq !== 'undefined') {
+    fbq('track', 'Lead', {
+      content_name: formType || 'contact_form',
+      status: success ? 'completed' : 'failed',
+      submission_method: method
+    });
+  }
+  
+  if (DEBUG_MODE) {
+    console.log('Analytics tracked:', { formType, success, method });
+  }
+};
+
 // Main function with dual submission
-export const sendEmail = async (data) => {
+export const sendEmail = async (data, formType = 'contact_form') => {
   // Start both requests in parallel for better performance
   const [emailJSSuccess, webhookSuccess] = await Promise.all([
     sendViaEmailJS(data),
@@ -130,8 +156,27 @@ export const sendEmail = async (data) => {
     });
   }
   
+  // Track submission results
+  const methods = [];
+  if (webhookSuccess) {
+    methods.push('webhook');
+    trackFormSubmission(formType, true, 'webhook');
+  }
+  if (emailJSSuccess) {
+    methods.push('emailjs');
+    trackFormSubmission(formType, true, 'emailjs');
+  }
+  
+  // Track overall success
+  const overallSuccess = emailJSSuccess || webhookSuccess;
+  if (overallSuccess) {
+    trackFormSubmission(formType, true, methods.join('+'));
+  } else {
+    trackFormSubmission(formType, false, 'both_failed');
+  }
+  
   // Only throw error if BOTH methods fail
-  if (!emailJSSuccess && !webhookSuccess) {
+  if (!overallSuccess) {
     throw new Error('Failed to send contact form data');
   }
   
@@ -139,7 +184,8 @@ export const sendEmail = async (data) => {
   return {
     emailJS: emailJSSuccess,
     webhook: webhookSuccess,
-    success: emailJSSuccess || webhookSuccess
+    success: overallSuccess,
+    methods: methods
   };
 };
 
@@ -148,9 +194,11 @@ export const sendWebhookOnly = async (data) => {
   return await sendToWebhook(data);
 };
 
-// Export configuration for external use
+// Export configuration and utilities for external use
 export const config = {
   WEBHOOK_URL,
   EMAILJS_CONFIG,
   DEBUG_MODE
 };
+
+export { trackFormSubmission };
