@@ -1,20 +1,12 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with the AircoLimburgAanbieding.nl codebase.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-AircoLimburgAanbieding.nl is a local SEO-optimized website for airconditioning services in Limburg, Netherlands. Built with vanilla HTML/CSS/JavaScript using Vite as the development server.
+AircoLimburgAanbieding.nl is a local SEO-optimized website for airconditioning services in Limburg, Netherlands. Built with vanilla HTML/CSS/JavaScript using Vite as the development server. The site focuses on conversion optimization and local search visibility.
 
-## Tech Stack
-
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+)
-- **Build Tool**: Vite
-- **Email Service**: EmailJS (service_1rruujp, template_rkcpzhg)
-- **Deployment**: Netlify (configured)
-- **Version Control**: Git
-
-## Common Commands
+## Commands
 
 ```bash
 # Install dependencies
@@ -30,136 +22,79 @@ npm run build
 npm run preview
 ```
 
-## Architecture & Code Structure
+## Architecture
 
-### Directory Structure
-```
-/
-├── index.html                 # Homepage with hero, services, FAQ
-├── producten.html            # Product showcase page
-├── steden/                   # City-specific landing pages
-│   ├── maastricht.html
-│   ├── sittard.html
-│   └── heerlen.html
-├── assets/
-│   ├── css/
-│   │   └── main.css         # Complete CSS framework
-│   └── js/
-│       ├── main.js          # Core JavaScript (navigation, forms, animations)
-│       └── products.js      # Product filtering logic
-├── public/
-│   └── images/
-│       ├── products/        # Product images
-│       └── brands/          # Brand logos (SVG)
-├── vite.config.js           # Vite configuration
-├── netlify.toml             # Netlify deployment config
-└── .gitignore               # Excludes large JPG files
-```
+### Core JavaScript Architecture (`assets/js/main.js`)
 
-### Key Components
+The application uses a class-based architecture with the following key components:
 
-1. **Navigation System** (`assets/js/main.js:53-152`)
-   - Transparent navbar that becomes solid on scroll
-   - Mobile-responsive hamburger menu
-   - Smooth scroll for anchor links
-   - Special handling for pages without hero section using `navbar-always-visible` class
+1. **CONFIG object** (lines 4-21): Central configuration for EmailJS and typewriter effect
+2. **Navigation class** (lines 53-152): Handles navbar transparency, mobile menu, and smooth scrolling
+3. **TypewriterEffect class** (lines 154-197): Animated text in hero section
+4. **FormHandler class** (lines 209-414): EmailJS integration with retry logic and validation
+5. **App class** (lines 596-660): Main application initialization with delayed FormHandler loading
 
-2. **Form Handler** (`assets/js/main.js:199-331`)
-   - EmailJS integration for all contact forms
-   - Form validation and error handling
-   - Success/error message display
-   - Analytics tracking for conversions
+### Critical EmailJS Implementation
 
-3. **Product Showcase** (`assets/js/products.js`)
-   - Dynamic product grid with filtering
-   - Category and brand filters
-   - Responsive layout
+The FormHandler has a specific initialization pattern to handle EmailJS loading:
+- Waits for EmailJS global to be available before initializing
+- Uses retry mechanism with 100ms delays
+- Template parameters include both Dutch and English field names for compatibility
+- Includes `full_message` field as fallback for email templates
 
-4. **SEO Optimizations**
-   - Meta titles and descriptions optimized for CTR
-   - FAQ section with Schema.org markup
-   - Local business structured data
-   - City-specific landing pages
+### Page Structure
 
-## Important Configuration
+- **Homepage (`index.html`)**: Hero section, services grid, FAQ with Schema.org markup
+- **Product page (`producten.html`)**: Inline JavaScript for filtering, uses data attributes
+- **City pages (`/steden/*.html`)**: SEO-optimized landing pages with hidden stad field
 
-### EmailJS Settings
-```javascript
-const CONFIG = {
-  emailjs: {
-    serviceId: 'service_1rruujp',
-    templateId: 'template_rkcpzhg',
-    publicKey: 'sjJ8kK6U9wFjY0zX9'
-  }
-}
-```
+### Build Configuration
 
-### Design System
-- **Primary Color**: Orange (#F97316)
-- **Font**: Inter
-- **Breakpoints**: 
-  - Mobile: < 768px
-  - Tablet: 768px - 1024px
-  - Desktop: > 1024px
+- **Vite config**: Terser minification, drops console logs in production
+- **Netlify config**: Headers for security, redirects for SEO, static site deployment
+- **Git**: Large JPG files excluded (installation photos), keeps repo under 35MB
 
-## Common Tasks
+## Key Implementation Details
 
-### Adding a New City Page
-1. Create new HTML file in `/steden/` directory
-2. Copy structure from existing city page
-3. Update meta tags and content for specific city
-4. Add to sitemap section in footer
-5. Update Netlify redirects if needed
+### Navbar Behavior
+- Transparent on homepage until scroll > 100px
+- Always visible on pages with `navbar-always-visible` class on body
+- Mobile menu with hamburger toggle
 
-### Updating Product Catalog
-1. Add product images to `/public/images/products/`
-2. Update product data in `/assets/js/products.js`
-3. Ensure images are optimized (WebP format preferred)
+### Form Handling
+All forms use class `contact-form` and are handled by FormHandler. Critical points:
+- EmailJS must load before form initialization
+- Service ID: `service_1rruujp`
+- Template ID: `template_rkcpzhg`
+- Public key: `sjJ8kK6U9wFjY0zX9`
 
-### Modifying Navigation
-1. Edit navigation structure in all HTML files
-2. Update mobile menu in `main.js` if adding new items
-3. Test smooth scroll functionality for new sections
+### Image Paths
+- Product images: `/public/images/products/` (WebP format)
+- Brand logos: `/public/images/brands/` (SVG format)
+- Large installation photos excluded from Git
 
-### Form Submissions
-All forms use EmailJS. To test:
-1. Fill out form with test data
-2. Check browser console for errors
-3. Verify email receipt at info@staycoolairco.nl
+### SEO Structure
+- Meta titles optimized for SERP CTR
+- FAQ section with Schema.org markup
+- Local business structured data
+- City-specific landing pages with unique content
 
-## Performance Considerations
+## Common Issues
 
-1. **Images**: Large JPG files are excluded from Git. Use optimized formats
-2. **Critical CSS**: Main CSS is loaded with high priority
-3. **Lazy Loading**: Implemented for images below the fold
-4. **Code Splitting**: EmailJS loaded as separate chunk
+1. **EmailJS not sending data**: Ensure EmailJS CDN loads before main.js
+2. **Product images not showing**: Check paths start with `/public/`
+3. **Navbar text unreadable**: Add `navbar-always-visible` to body class
+4. **Build errors with modules**: Add `type="module"` to script tags
 
-## Deployment
+## Development Workflow
 
-The site is configured for Netlify deployment:
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Headers and redirects configured in `netlify.toml`
+1. Run `npm run dev` for local development
+2. Test forms in browser console - check for EmailJS initialization
+3. Build with `npm run build` before committing
+4. Git push automatically deploys via Netlify
 
-## Testing Checklist
+## Contact
 
-Before committing changes:
-- [ ] Test mobile responsiveness
-- [ ] Verify form submissions work
-- [ ] Check navigation on all pages
-- [ ] Validate SEO meta tags
-- [ ] Test page load speed
-- [ ] Ensure no console errors
-
-## Known Issues & Solutions
-
-1. **Navbar Text Visibility**: Pages without hero sections need `navbar-always-visible` class on body
-2. **Large Repository Size**: Installation photos excluded via .gitignore to keep repo under 35MB
-3. **Mobile Sticky CTA**: Only visible on mobile devices (max-width: 768px)
-
-## Contact & Support
-
-- **Domain**: aircolimburgaanbieding.nl
-- **Phone**: 046-202-1430
-- **Email**: info@staycoolairco.nl
-- **GitHub**: Repository available for version control
+- Domain: aircolimburgaanbieding.nl
+- Phone: 046-202-1430
+- Email: info@staycoolairco.nl
