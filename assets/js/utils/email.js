@@ -1,55 +1,17 @@
-// Email utility with dual submission (EmailJS + GoHighLevel webhook)
+// Email utility with dual submission (EmailJS + LeadFlow)
 
 // Configuration
-const WEBHOOK_URL = "https://services.leadconnectorhq.com/hooks/k90zUH3RgEQLfj7Yc55b/webhook-trigger/54670718-ea44-43a1-a81a-680ab3d5f67f";
 const DEBUG_MODE = false; // Enable for troubleshooting
+
+// LeadFlow CRM configuration
+const LEADFLOW_URL = "https://wetryleadflow.com/api/webhooks/leads";
+const LEADFLOW_API_KEY = "lf_lRyHo1ENukt9VsG9gYT8EKeDA_nKuoQ1";
 
 // EmailJS configuration (same as main.js)
 const EMAILJS_CONFIG = {
   serviceId: 'service_1rruujp',
   templateId: 'template_rkcpzhg',
   publicKey: 'sjJ8kK6U9wFjY0zX9'
-};
-
-// Send data to GoHighLevel webhook
-const sendToWebhook = async (data) => {
-  try {
-    const webhookData = {
-      data: {
-        name: `${data.voornaam} ${data.achternaam}`.trim(),
-        email: data.email,
-        phone: data.telefoon,
-        city: data.stad,
-        message: data.bericht || 'Geen aanvullende informatie'
-      }
-    };
-
-    if (DEBUG_MODE) {
-      console.log('Sending to webhook:', webhookData);
-    }
-
-    const response = await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(webhookData)
-    });
-
-    if (!response.ok) {
-      console.error('Webhook response not OK:', response.status);
-      return false;
-    }
-    
-    if (DEBUG_MODE) {
-      console.log('Webhook sent successfully');
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Webhook error:', error);
-    return false;
-  }
 };
 
 // Send via EmailJS (existing method)
@@ -115,6 +77,56 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
   }
 };
 
+// Send data to LeadFlow CRM
+const sendToLeadflow = async (data) => {
+  try {
+    const name = `${data.voornaam} ${data.achternaam}`.trim();
+    const nameParts = name.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const leadflowData = {
+      firstName,
+      lastName,
+      email: data.email,
+      phone: data.telefoon,
+      message: data.bericht || '',
+      source: 'website-contact',
+      customFields: {
+        city: data.stad || '',
+        woonplaats: data.stad || ''
+      }
+    };
+
+    if (DEBUG_MODE) {
+      console.log('Sending data to Leadflow CRM:', leadflowData);
+    }
+
+    const response = await fetch(LEADFLOW_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": LEADFLOW_API_KEY
+      },
+      body: JSON.stringify(leadflowData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Leadflow error (' + response.status + '):', errorText);
+      return false;
+    }
+
+    if (DEBUG_MODE) {
+      console.log('Leadflow submission successful');
+    }
+    return true;
+  } catch (error) {
+    console.error('Leadflow submission failed:', error);
+    return false;
+  }
+};
+
 // Analytics tracking helpers
 const trackFormSubmission = (formType, success, method) => {
   // Google Analytics 4
@@ -143,60 +155,54 @@ const trackFormSubmission = (formType, success, method) => {
 
 // Main function with dual submission
 export const sendEmail = async (data, formType = 'contact_form') => {
-  // Start both requests in parallel for better performance
-  const [emailJSSuccess, webhookSuccess] = await Promise.all([
+  // Start all requests in parallel for better performance
+  const [emailJSSuccess, leadflowSuccess] = await Promise.all([
     sendViaEmailJS(data),
-    sendToWebhook(data)
+    sendToLeadflow(data)
   ]);
-  
+
   if (DEBUG_MODE) {
     console.log('Submission results:', {
       emailJS: emailJSSuccess,
-      webhook: webhookSuccess
+      leadflow: leadflowSuccess
     });
   }
-  
+
   // Track submission results
   const methods = [];
-  if (webhookSuccess) {
-    methods.push('webhook');
-    trackFormSubmission(formType, true, 'webhook');
-  }
   if (emailJSSuccess) {
     methods.push('emailjs');
     trackFormSubmission(formType, true, 'emailjs');
   }
-  
+  if (leadflowSuccess) {
+    methods.push('leadflow');
+    trackFormSubmission(formType, true, 'leadflow');
+  }
+
   // Track overall success
-  const overallSuccess = emailJSSuccess || webhookSuccess;
+  const overallSuccess = emailJSSuccess || leadflowSuccess;
   if (overallSuccess) {
     trackFormSubmission(formType, true, methods.join('+'));
   } else {
-    trackFormSubmission(formType, false, 'both_failed');
+    trackFormSubmission(formType, false, 'all_failed');
   }
-  
-  // Only throw error if BOTH methods fail
+
+  // Only throw error if ALL methods fail
   if (!overallSuccess) {
     throw new Error('Failed to send contact form data');
   }
-  
+
   // Return success status for tracking
   return {
     emailJS: emailJSSuccess,
-    webhook: webhookSuccess,
+    leadflow: leadflowSuccess,
     success: overallSuccess,
     methods: methods
   };
 };
 
-// Function to send only to webhook (for testing)
-export const sendWebhookOnly = async (data) => {
-  return await sendToWebhook(data);
-};
-
 // Export configuration and utilities for external use
 export const config = {
-  WEBHOOK_URL,
   EMAILJS_CONFIG,
   DEBUG_MODE
 };

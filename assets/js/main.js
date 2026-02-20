@@ -205,6 +205,10 @@ class TypewriterEffect {
   }
 }
 
+// LeadFlow CRM configuration
+const LEADFLOW_URL = "https://wetryleadflow.com/api/webhooks/leads";
+const LEADFLOW_API_KEY = "lf_lRyHo1ENukt9VsG9gYT8EKeDA_nKuoQ1";
+
 // ===== FORM HANDLER WITH WEBHOOK =====
 class FormHandler {
   constructor() {
@@ -345,9 +349,9 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
         }
       } else {
         // Fallback to inline methods
-        const [emailJSSuccess, webhookSuccess] = await Promise.all([
+        const [emailJSSuccess, leadflowSuccess] = await Promise.all([
           this.sendViaEmailJS(templateParams),
-          this.sendToWebhook({
+          this.sendToLeadflow({
             voornaam,
             achternaam,
             email,
@@ -356,28 +360,33 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
             bericht
           })
         ]);
-        
+
         console.log('Submission results (inline):', {
           emailJS: emailJSSuccess,
-          webhook: webhookSuccess
+          leadflow: leadflowSuccess
         });
-        
-        // Only throw error if BOTH methods fail
-        if (!emailJSSuccess && !webhookSuccess) {
+
+        // Only throw error if ALL methods fail
+        if (!emailJSSuccess && !leadflowSuccess) {
           throw new Error('Failed to send contact form data');
         }
       }
       
       this.showMessage('Bedankt! Uw aanvraag is verstuurd. Wij nemen binnen 24 uur contact met u op.', 'success');
       form.reset();
-      
+
       // Track conversion (if analytics is available)
       if (typeof gtag !== 'undefined') {
         gtag('event', 'conversion', {
           send_to: 'AW-CONVERSION_ID/CONVERSION_LABEL'
         });
       }
-      
+
+      // Redirect to thank you page after a short delay
+      setTimeout(() => {
+        window.location.href = 'https://staycoolairco.nl/tot-snel';
+      }, 1500);
+
     } catch (error) {
       console.error('Form submission error:', error);
       this.showMessage('Er is een fout opgetreden. Probeer het opnieuw of bel ons direct: 046-202-1430', 'error');
@@ -410,42 +419,51 @@ Tijd: ${new Date().toLocaleTimeString('nl-NL')}
     }
   }
   
-  async sendToWebhook(data) {
+  async sendToLeadflow(data) {
     try {
-      const webhookUrl = 'https://services.leadconnectorhq.com/hooks/k90zUH3RgEQLfj7Yc55b/webhook-trigger/54670718-ea44-43a1-a81a-680ab3d5f67f';
-      const webhookData = {
-        data: {
-          name: `${data.voornaam} ${data.achternaam}`.trim(),
-          email: data.email,
-          phone: data.telefoon,
-          city: data.stad,
-          message: data.bericht || 'Geen aanvullende informatie'
+      const name = `${data.voornaam} ${data.achternaam}`.trim();
+      const nameParts = name.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      const leadflowData = {
+        firstName,
+        lastName,
+        email: data.email,
+        phone: data.telefoon,
+        message: data.bericht || '',
+        source: 'website-contact',
+        customFields: {
+          city: data.stad || '',
+          woonplaats: data.stad || ''
         }
       };
-      
-      console.log('Sending to webhook:', webhookData);
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
+
+      console.log('Sending data to Leadflow CRM:', leadflowData);
+
+      const response = await fetch(LEADFLOW_URL, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
+          "X-API-Key": LEADFLOW_API_KEY
         },
-        body: JSON.stringify(webhookData)
+        body: JSON.stringify(leadflowData)
       });
-      
+
       if (!response.ok) {
-        console.error('Webhook response not OK:', response.status);
+        const errorText = await response.text();
+        console.error('Leadflow error (' + response.status + '):', errorText);
         return false;
       }
-      
-      console.log('Webhook sent successfully');
+
+      console.log('Leadflow submission successful');
       return true;
     } catch (error) {
-      console.error('Webhook error:', error);
+      console.error('Leadflow submission failed:', error);
       return false;
     }
   }
-  
+
   validateForm(data) {
     const required = ['voornaam', 'achternaam', 'email', 'telefoon', 'stad'];
     return required.every(field => data[field] && data[field].trim() !== '');

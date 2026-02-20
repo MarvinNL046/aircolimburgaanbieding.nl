@@ -1,4 +1,4 @@
-// Enhanced EmailJS handler with GoHighLevel webhook integration
+// Enhanced EmailJS handler with LeadFlow integration
 // This file can be included separately or replace the FormHandler in main.js
 
 // Import email utility functions
@@ -80,12 +80,10 @@ class EnhancedFormHandler {
       // Track conversions
       this.trackConversion();
       
-      // Optional: Redirect to thank you page
+      // Redirect to thank you page after a short delay
       setTimeout(() => {
-        if (window.location.pathname !== '/tot-snel.html') {
-          window.location.href = '/tot-snel.html';
-        }
-      }, 2000);
+        window.location.href = 'https://staycoolairco.nl/tot-snel';
+      }, 1500);
       
     } catch (error) {
       console.error('Form submission error:', error);
