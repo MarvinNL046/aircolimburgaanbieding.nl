@@ -70,6 +70,17 @@
   to = "/steden/heerlen.html"
   status = 301
 
+# Ensure sitemap.xml and robots.txt are served directly
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+
+[[redirects]]
+  from = "/robots.txt"
+  to = "/robots.txt"
+  status = 200
+
 # Fallback voor SPA routes (als nodig)
 [[redirects]]
   from = "/*"
